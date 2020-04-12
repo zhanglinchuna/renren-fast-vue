@@ -17,7 +17,9 @@
     <el-row v-if="draggable" style="display: inline-block;">
       <el-button type="primary" round size="mini" @click="batchSave">保存拖拽菜单</el-button>
     </el-row>
-
+    <el-row style="display: inline-block;">
+      <el-button type="danger" round size="mini" @click="batchDelete">批量删除</el-button>
+    </el-row>
     <el-tree
       :data="menus"
       :props="defaultProps"
@@ -29,6 +31,7 @@
       :draggable="draggable"
       :allow-drop="allowDrop"
       @node-drop="handleDrop"
+      ref="menuTree"
     >
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
@@ -150,6 +153,48 @@ export default {
           this.updateNodes.push({ catId: siblings[i].data.catId, sort: i });
         }
       }
+    },
+    batchDelete() {
+      let catIds = [];
+      let catNames = [];
+      let expandedKey = "0";
+      let checkedNodes = this.$refs.menuTree.getCheckedNodes();
+      if(checkedNodes != null && checkedNodes.length > 0){
+        expandedKey = checkedNodes[0].parentCid;
+      }else{
+        this.$message.error({
+          message: "请选中要删除的菜单！",
+          duration: "2000"
+        });
+        return;
+      }
+      for (let i = 0; i < checkedNodes.length; i++) {
+        catIds.push(checkedNodes[i].catId);
+        catNames.push(checkedNodes[i].name);
+      }
+      this.$confirm(`是否批量删除【${catNames}】菜单?`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          this.$http({
+            url: this.$http.adornUrl("/product/category/delete"),
+            method: "post",
+            data: this.$http.adornData(catIds, false)
+          }).then(({ data }) => {
+            this.$message({
+              message: `成功删除【${catNames}】菜单`,
+              type: "success",
+              duration: "2000"
+            });
+            this.getDataList();
+            this.expandedKeys = [expandedKey];
+          });
+        })
+        .catch(() => {
+          console.log("已取消");
+        });
     },
     batchSave() {
       this.$http({

@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    :title="!dataForm.id ? '新增' : '修改'"
+    :title="titleType ? '新增' : '修改'"
     :close-on-click-modal="false"
     :visible.sync="visible"
     @closed="dialogClose"
@@ -95,6 +95,7 @@ export default {
   data() {
     return {
       visible: false,
+      titleType: false,
       dataForm: {
         attrId: 0,
         attrName: "",
@@ -200,6 +201,9 @@ export default {
   components: { CategoryCascader },
   methods: {
     init(id) {
+      if (id == undefined) {
+        this.titleType = true;
+      }
       this.dataForm.attrId = id || 0;
       this.dataForm.attrType = this.type;
       this.visible = true;
